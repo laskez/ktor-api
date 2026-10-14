@@ -3,12 +3,12 @@
 
 ## Стек
 
-- Kotlin 2.3.0
-- Ktor 3.6.0
-- kotlinx.serialization + ContentNegotiation
-- JWT
-- BCrypt
-- Gradle, JDK 21
+![Kotlin](https://img.shields.io/badge/Kotlin-2.3.0-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
+![Ktor](https://img.shields.io/badge/Ktor-3.6.0-087CFA?style=for-the-badge&logo=ktor&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-Auth-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
+![Swagger](https://img.shields.io/badge/Swagger-UI-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)
+![Gradle](https://img.shields.io/badge/Gradle-Build-02303A?style=for-the-badge&logo=gradle&logoColor=white)
+![JDK](https://img.shields.io/badge/JDK-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
 
 ## Запуск
 
@@ -17,6 +17,34 @@
 ```
 
 Сервер на http://localhost:8080
+
+## Swagger UI
+
+Интерактивная документация API доступна по адресу:
+
+```
+http://localhost:8080/swagger
+```
+
+Там описаны все маршруты с параметрами, схемами запросов и ответов. 
+Можно нажать **Try it out** и отправить запрос прямо из браузера.
+Для защищенных маршрутов - кнопка **Authorize** сверху, куда вставляется JWT-токен.
+
+Спецификация OpenAPI лежит в `src/main/resources/openapi/documentation.yaml`
+
+## Тесты
+
+Запуск всех тестов:
+
+```bash
+.\gradlew.bat test
+```
+
+Покрыто 13 тестов:
+- публичные GET-маршруты (`/tasks`,`/tasks/{id}`, фильтр `?done=true`, ошибки 400/404)
+- регистрация (успех, занятый логин, пустой логин)
+- вход (успех, неверный пароль)
+- защита маршрутов (401 без токена, 201 с токеном, 204 при удалении)
 
 ## Аутентификация
 Часть маршрутов защищена JWT-токеном:
@@ -83,12 +111,20 @@ curl -i -X POST http://localhost:8080/tasks \
 
 ## Коды ответов
 
-| Код | Когда                                         |
-|-----|-----------------------------------------------|
-| 200 | Успешный GET или PUT                          |
-| 201 | Задача создана / пользователь зарегистрирован |
-| 204 | Задача удалена                                |
-| 400 | Некорректный id, JSON или пустые поля         |
-| 404 | Задача не найдена                             |
-| 409 | Логин уже занят                               |
+| Код  | Когда                                         |
+|------|-----------------------------------------------|
+| 200  | Успешный GET или PUT                          |
+| 201  | Задача создана / пользователь зарегистрирован |
+| 204  | Задача удалена                                |
+| 400  | Некорректный id, JSON или пустые поля         |
+| 401  | Неверный пароль или отсутствует токен         |
+| 404  | Задача не найдена                             |
+| 409  | Логин уже занят                               |
 
+## Обработка ошибок и логирование
+
+- **StatusPages** - централизованная обработка исключений. 
+Некорректный JSON в теле запроса возвращает `400` с описанием, любое необработанное исключение - `500`.
+Отдельные `try/catch` в маршрутах не нужны.
+- **CallLogging** - каждый входящий запрос логируется в консоль в формате `METHOD PATH -> STATUS`.
+Уровень логирования - `INFO` (настраивается в `src/main/resources/logback.xml`)
