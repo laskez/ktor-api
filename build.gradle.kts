@@ -28,6 +28,7 @@ dependencies {
     implementation(libs.java.jwt)
     implementation(libs.ktor.server.status.pages)
     implementation(libs.ktor.server.call.logging)
+    implementation(libs.ktor.server.swagger)
 
     testImplementation(kotlin("test"))
     testImplementation(ktorLibs.server.testHost)
