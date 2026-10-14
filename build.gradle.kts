@@ -26,6 +26,8 @@ dependencies {
     implementation(libs.ktor.server.auth.jwt)
     implementation(libs.bcrypt)
     implementation(libs.java.jwt)
+    implementation(libs.ktor.server.status.pages)
+    implementation(libs.ktor.server.call.logging)
 
     testImplementation(kotlin("test"))
     testImplementation(ktorLibs.server.testHost)
