@@ -35,4 +35,15 @@ object TaskRepository {
     }
 
     fun delete(id: Int): Boolean = tasks.removeIf { it.id == id }
+
+    fun reset() {
+        tasks.clear()
+        tasks.addAll(
+            listOf(
+                Task(1, "Сходить погулять"),
+                Task(2, "Зайти в магазин", done = true)
+            )
+        )
+        nextId = 3
+    }
 }

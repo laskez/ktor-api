@@ -14,4 +14,9 @@ object UserRepository {
         users.add(user)
         return user
     }
+
+    fun reset() {
+        users.clear()
+        nextId = 1
+    }
 }
