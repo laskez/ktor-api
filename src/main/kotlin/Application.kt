@@ -1,5 +1,7 @@
 package com.example
 
+import com.example.database.DatabaseConfig
+import com.example.database.DatabaseFactory
 import com.example.model.ErrorResponse
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
@@ -13,10 +15,22 @@ import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.httpMethod
 import io.ktor.server.request.path
 import io.ktor.server.response.*
+import io.ktor.server.websocket.*
 import kotlinx.serialization.json.Json
 import org.slf4j.event.Level
+import kotlin.time.Duration.Companion.seconds
 
 fun Application.module() {
+    val dbConfig = DatabaseConfig.from(environment.config)
+    DatabaseFactory.init(dbConfig)
+
+    install(WebSockets) {
+        pingPeriod = 15.seconds
+        timeout = 15.seconds
+        maxFrameSize = Long.MAX_VALUE
+        masking = false
+    }
+
     install(ContentNegotiation) {
         json(Json {
             prettyPrint = true

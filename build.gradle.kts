@@ -29,6 +29,11 @@ dependencies {
     implementation(libs.ktor.server.status.pages)
     implementation(libs.ktor.server.call.logging)
     implementation(libs.ktor.server.swagger)
+    implementation(libs.ktor.server.websockets)
+
+    implementation(libs.exposed.core)
+    implementation(libs.exposed.jdbc)
+    implementation(libs.postgresql)
 
     testImplementation(kotlin("test"))
     testImplementation(ktorLibs.server.testHost)

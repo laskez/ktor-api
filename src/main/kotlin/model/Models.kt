@@ -21,7 +21,8 @@ data class RegisterRequest(val login: String, val password: String)
 data class User(
     val id: Int,
     val login: String,
-    val passwordHash: String
+    val passwordHash: String,
+    val role: String = "user"
 )
 
 @Serializable

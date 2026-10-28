@@ -1,49 +1,45 @@
 package com.example.repository
 
+import com.example.database.TasksTable
 import com.example.model.Task
-import java.util.concurrent.CopyOnWriteArrayList
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.transactions.transaction
 
 object TaskRepository {
-    private val tasks = CopyOnWriteArrayList(
-        listOf(
-            Task(1, "Сходить погулять"),
-            Task(2, "Зайти в магазин", done = true)
-        )
+
+    fun getAll(): List<Task> = transaction {
+        TasksTable.selectAll().map { it.toTask() }
+    }
+
+    fun getById(id: Int): Task? = transaction {
+        TasksTable.select(TasksTable.id eq id).singleOrNull()?.toTask()
+    }
+
+    fun create(title: String): Task = transaction {
+        val id = TasksTable.insertAndGetId {
+            it[TasksTable.title] = title
+            it[done] = false
+        }
+        Task(id.value, title, false)
+    }
+
+    fun update(id: Int, title: String?, done: Boolean?): Task? = transaction {
+        val existing = TasksTable.select(TasksTable.id eq id).singleOrNull() ?: return@transaction null
+        TasksTable.update({ TasksTable.id eq id }) {
+            if (title != null) it[TasksTable.title] = title
+            if (done != null) it[TasksTable.done] = done
+        }
+        Task(id, title ?: existing[TasksTable.title], done ?: existing[TasksTable.done])
+    }
+
+    fun delete(id: Int): Boolean = transaction {
+        TasksTable.deleteWhere { TasksTable.id eq id } > 0
+    }
+
+    private fun ResultRow.toTask() = Task(
+        id = this[TasksTable.id].value,
+        title = this[TasksTable.title],
+        done = this[TasksTable.done]
     )
-    private var nextId = 3
-
-    fun getAll(): List<Task> = tasks.toList()
-
-    fun getById(id: Int): Task? = tasks.find { it.id == id }
-
-    fun create(title: String): Task {
-        val task = Task(nextId++, title)
-        tasks.add(task)
-        return task
-    }
-
-    fun update(id: Int, title: String?, done: Boolean?): Task? {
-        val index = tasks.indexOfFirst { it.id == id }
-        if (index == -1) return null
-        val old = tasks[index]
-        val updated = old.copy(
-            title = title ?: old.title,
-            done = done ?: old.done
-        )
-        tasks[index] = updated
-        return updated
-    }
-
-    fun delete(id: Int): Boolean = tasks.removeIf { it.id == id }
-
-    fun reset() {
-        tasks.clear()
-        tasks.addAll(
-            listOf(
-                Task(1, "Сходить погулять"),
-                Task(2, "Зайти в магазин", done = true)
-            )
-        )
-        nextId = 3
-    }
 }

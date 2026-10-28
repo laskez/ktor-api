@@ -42,7 +42,7 @@ fun Route.authRoutes() {
                 return@post
             }
 
-            val token = JwtConfig.generateToken(user.id, user.login)
+            val token = JwtConfig.generateToken(user.id, user.login, user.role)
             call.respond(AuthResponse(token))
         }
     }

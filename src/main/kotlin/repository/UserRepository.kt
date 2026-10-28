@@ -1,22 +1,30 @@
 package com.example.repository
 
+import com.example.database.UsersTable
 import com.example.model.User
-import java.util.concurrent.CopyOnWriteArrayList
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.transactions.transaction
 
 object UserRepository {
-    private val users = CopyOnWriteArrayList<User>()
-    private var nextId = 1
 
-    fun findByLogin(login: String): User? = users.find { it.login == login }
-
-    fun create(login: String, passwordHash: String): User {
-        val user = User(nextId++, login, passwordHash)
-        users.add(user)
-        return user
+    fun findByLogin(login: String): User? = transaction {
+        UsersTable.select(UsersTable.login eq login).singleOrNull()?.toUser()
     }
 
-    fun reset() {
-        users.clear()
-        nextId = 1
+    fun create(login: String, passwordHash: String, role: String = "user"): User = transaction {
+        val id = UsersTable.insertAndGetId {
+            it[UsersTable.login] = login
+            it[UsersTable.passwordHash] = passwordHash
+            it[UsersTable.role] = role
+        }
+        User(id.value, login, passwordHash, role)
     }
+
+    private fun ResultRow.toUser() = User(
+        id = this[UsersTable.id].value,
+        login = this[UsersTable.login],
+        passwordHash = this[UsersTable.passwordHash],
+        role = this[UsersTable.role]
+    )
 }

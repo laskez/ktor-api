@@ -9,11 +9,12 @@ object JwtConfig {
     private const val ISSUER = "ktor-task-api"
     private const val VALIDITY_MS = 3600_000L
 
-    fun generateToken(userId: Int, login: String): String {
+    fun generateToken(userId: Int, login: String, role: String): String {
         return JWT.create()
             .withIssuer(ISSUER)
             .withClaim("userId", userId)
             .withClaim("login", login)
+            .withClaim("role", role)
             .withExpiresAt(Date(System.currentTimeMillis() + VALIDITY_MS))
             .sign(Algorithm.HMAC256(SECRET))
     }

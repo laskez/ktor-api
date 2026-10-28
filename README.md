@@ -5,18 +5,42 @@
 
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.3.0-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
 ![Ktor](https://img.shields.io/badge/Ktor-3.6.0-087CFA?style=for-the-badge&logo=ktor&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 ![JWT](https://img.shields.io/badge/JWT-Auth-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
 ![Swagger](https://img.shields.io/badge/Swagger-UI-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![Gradle](https://img.shields.io/badge/Gradle-Build-02303A?style=for-the-badge&logo=gradle&logoColor=white)
 ![JDK](https://img.shields.io/badge/JDK-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)
 
 ## Запуск
 
+### Вариант 1: Локальный запуск
+
+Нужен запущенный PostgreSQL и созданная база `ktor_api`. 
+
+После этого:
+
 ```
 .\gradlew.bat run
 ```
 
-Сервер на http://localhost:8080
+Сервер будет доступен по адресу: http://localhost:8080
+
+### Вариант 2: Запуск через Docker
+
+Нужен установленный и запущенный Docker Desktop.
+
+В корне проекта выполнить:
+
+```bash
+docker compose up --build
+```
+
+Запустятся два контейнера:
+- `ktor_app` - приложение на порту 8080
+- `ktor_db` - PostgreSQL
+
+Сервер будет доступен по адресу: http://localhost:8080
 
 ## Swagger UI
 
@@ -46,7 +70,10 @@ http://localhost:8080/swagger
 - вход (успех, неверный пароль)
 - защита маршрутов (401 без токена, 201 с токеном, 204 при удалении)
 
-## Аутентификация
+## Аутентификация и роли
+
+Пользователи бывают двух ролей: `user` (стандартный) и `admin` (администратор).
+
 Часть маршрутов защищена JWT-токеном:
 1. Зарегистрироваться через `/auth/register`
 2. Войти через `/auth/login` - получить токен
@@ -72,14 +99,14 @@ curl -i -X POST http://localhost:8080/auth/login \
 
 ## Маршруты
 
-| Метод  | Путь               | Что делает         | Доступ    |
-|--------|--------------------|--------------------|-----------|
-| GET    | `/tasks`           | Все задачи         | публичный |
-| GET    | `/tasks?done=true` | Только выполненные | публичный | 
-| GET    | `/tasks/{id}`      | Одна задача        | публичный | 
-| POST   | `/tasks`           | Создать            | нужен JWT |
-| PUT    | `/tasks/{id}`      | Обновить           | нужен JWT |
-| DELETE | `/tasks/{id}`      | Удалить            | нужен JWT |
+| Метод  | Путь               | Что делает         | Доступ                   |
+|--------|--------------------|--------------------|--------------------------|
+| GET    | `/tasks`           | Все задачи         | публичный                |
+| GET    | `/tasks?done=true` | Только выполненные | публичный                | 
+| GET    | `/tasks/{id}`      | Одна задача        | публичный                | 
+| POST   | `/tasks`           | Создать            | нужен JWT                |
+| PUT    | `/tasks/{id}`      | Обновить           | нужен JWT                |
+| DELETE | `/tasks/{id}`      | Удалить            | нужен JWT (только admin) |
 
 ## Примеры
 
@@ -109,6 +136,18 @@ curl -i -X POST http://localhost:8080/tasks \
 -d '{"title":"Без токена"}'
 ```
 
+## WebSocket уведомления
+
+Сервер рассылает уведомление в реальном времени при создании задачи.
+Для подключения используется адрес: `ws://localhost:8080/ws/notifications`
+
+Пример для проверки через консоль браузера (F12):
+```javascript
+let ws = new WebSocket("ws://localhost:8080/ws/notifications");
+ws.onmessage = (event) => console.log("Уведомление:", event.data);
+```
+
+После этого любое создание задачи (через API) будет выводить сообщение в консоль.
 ## Коды ответов
 
 | Код  | Когда                                         |

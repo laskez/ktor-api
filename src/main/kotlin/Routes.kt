@@ -9,15 +9,16 @@ import io.ktor.server.plugins.swagger.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.coroutines.launch
 
 fun Application.configureRoutes() {
     routing {
+        webSocketRoutes()
         swaggerUI(path = "swagger", swaggerFile = "openapi/documentation.yaml")
         authRoutes()
 
         route("/tasks") {
 
-            // Публичные
             get {
                 val doneParam = call.request.queryParameters["done"]
                 val all = TaskRepository.getAll()
@@ -46,7 +47,6 @@ fun Application.configureRoutes() {
                 }
             }
 
-            // Защищенные
             authenticate("auth-jwt") {
 
                 post {
@@ -56,6 +56,11 @@ fun Application.configureRoutes() {
                         return@post
                     }
                     val created = TaskRepository.create(newTask.title)
+
+                    launch {
+                        TaskWebSocketManager.broadcast("Создана новая задача: ${created.title} (id=${created.id})")
+                    }
+
                     call.respond(HttpStatusCode.Created, created)
                 }
 
@@ -75,6 +80,11 @@ fun Application.configureRoutes() {
                 }
 
                 delete("/{id}") {
+                    if (!call.isAdmin()) {
+                        call.respond(HttpStatusCode.Forbidden, ErrorResponse("Доступ запрещён. Только для администраторов."))
+                        return@delete
+                    }
+
                     val id = call.parameters["id"]?.toIntOrNull()
                     if (id == null) {
                         call.respond(HttpStatusCode.BadRequest, ErrorResponse("Некорректный id"))
